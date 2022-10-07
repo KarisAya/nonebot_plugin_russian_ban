@@ -90,11 +90,12 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), stat
     ban_list = {event.group_id:[]}
     member_list = await bot.get_group_member_list(group_id = event.group_id, no_cache = True)
     msg = ""
+    now = time.time()
     for member in member_list:
-        if member['shut_up_timestamp'] > 0:
+        if member['shut_up_timestamp'] > now:
             ban_list[event.group_id].append(member['user_id'])
             nickname = member['card'] or member['nickname']
-            t = int((member['shut_up_timestamp'] - time.time()))
+            t = int((member['shut_up_timestamp'] - now))
             td = int(t/86400)
             t -= td * 86400
             th = int(t/3600)
