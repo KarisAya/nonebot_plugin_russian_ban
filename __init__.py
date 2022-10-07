@@ -13,6 +13,8 @@ from nonebot.permission import SUPERUSER
 from nonebot.typing import T_State
 from nonebot.params import Depends, CommandArg, Arg, State
 
+from nonebot import logger
+
 import asyncio
 import time
 import random
@@ -81,19 +83,16 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         else:
             pass
 
-global ban_list
-
 amnesty = on_command("解封", aliases = {"解禁", "解除禁言"}, permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 5)
 
 @amnesty.handle()
 async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), state: T_State = State()):
-    global ban_list
-    ban_list = []
+    ban_list = {event.group_id:[]}
     member_list = await bot.get_group_member_list(group_id = event.group_id, no_cache = True)
     msg = ""
     for member in member_list:
         if member['shut_up_timestamp'] > 0:
-            ban_list.append(member['user_id'])
+            ban_list[event.group_id].append(member['user_id'])
             nickname = member['card'] or member['nickname']
             t = int((member['shut_up_timestamp'] - time.time()))
             td = int(t/86400)
@@ -107,44 +106,76 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), stat
             Time += f" {tm} 分钟"
             msg += f"{nickname} {member['user_id']}\n    -- {Time}\n"
     else:
-        if ban_list:
-            name = arg.extract_plain_text().strip()
+        if ban_list[event.group_id]:
+            state['ban_list'] = ban_list[event.group_id]
+            user_id = get_message_at(event.json())
+
             group_id = str(event.group_id)
             namelist.setdefault(group_id,{})
-            if name in namelist[group_id].keys():
-                state['user_id'] = namelist[group_id][name]
+            code = arg.extract_plain_text().strip()
+            user = namelist[group_id].get(code)
+
+            if user:
+                user_id.append(user)
+
+            if user_id:
+                state['user_id'] = ""
+                for i in user_id:
+                    state['user_id'] += f"{i} "
             else:
                 await amnesty.send("以下成员正在禁言：\n" + msg[:-1])
-                await asyncio.sleep(2)
+                await asyncio.sleep(1)
         else:
             await amnesty.finish()
 
 @amnesty.got("user_id", prompt = "请输入要解除禁言的成员，如输入多个群成员用空格隔开。")
-async def _(bot:Bot, event: GroupMessageEvent, user_id: Message = Arg()):
-    global ban_list
+async def _(bot:Bot, event: GroupMessageEvent, user_id: Message = Arg(), state: T_State = State()):
     user_id = str(user_id).strip().split()
     if user_id:
         for i in user_id:
-            if int(i) in ban_list:
+            if int(i) in state['ban_list']:
                 await bot.set_group_ban(group_id = event.group_id, user_id = int(i), duration = 0)
 
     await amnesty.finish()
 
-global star, st
-star = 0
-st = 0
+global switch
+switch = {}
 
-ban_game = on_command("无赌注轮盘", aliases = {"自由轮盘", "拨动滚轮"}, priority = 5)
+global star, st
+star = {}
+st = {}
+
+ban_game_switch_on = on_command("开启自由轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
+@ban_game_switch_on.handle()
+async def _(bot:Bot, event: GroupMessageEvent):
+    switch[event.group_id] = True
+    logger.info("自由轮盘已开启！")
+
+ban_game_switch_off = on_command("关闭自由轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
+@ban_game_switch_off.handle()
+async def _(bot:Bot, event: GroupMessageEvent):
+    switch[event.group_id] = False
+    star = {}
+    st = {}
+    logger.info("自由轮盘已关闭！")
+
+async def S(bot: Bot, event: GroupMessageEvent) -> bool:
+    switch.setdefault(event.group_id,False)
+    return switch[event.group_id]
+
+
+
+ban_game = on_command("无赌注轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER | S ,aliases = {"自由轮盘", "拨动滚轮"}, priority = 5)
 
 @ban_game.handle()
 async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
     global star, st
-    if star:
-        star = random.randint(1,6)
-        st = 0
+    st[event.group_id] = 0
+    if star.setdefault(event.group_id,0):
+        star[event.group_id] = random.randint(1,6)
         await ban_game.finish("重新装弹！")
     else:
-        star = random.randint(1,6)
+        star[event.group_id] = random.randint(1,6)
         msg = [
             "这个游戏非常简单，只需要几种道具：一把左轮，一颗子弹，以及愿意跟你一起玩的人。",
             "拿起这把左轮，对着自己的脑袋扣动扳机。如果安然无恙，继续游戏。",
@@ -155,19 +186,19 @@ async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
             ]
         await ban_game.finish("游戏开始！\n"+ random.choice(msg))
 
-async def Ready(bot: Bot, event: Event) -> bool:
-    global star
-    return star > 0
+async def Ready(bot: Bot, event: GroupMessageEvent) -> bool:
+    star.setdefault(event.group_id,0)
+    return star[event.group_id] > 0
 
 shot = on_command("开枪", permission = Ready ,priority = 4, block=True)
 
 @shot.handle()
 async def _(bot:Bot, event: GroupMessageEvent):
     global star, st
-    st += 1
-    if st == star:
-        star = 0
-        st = 0
+    st[event.group_id] += 1
+    if st[event.group_id] == star[event.group_id]:
+        star[event.group_id] = 0
+        st[event.group_id] = 0
         try:
             await bot.set_group_ban(group_id = event.group_id, user_id = event.user_id, duration = random.randint(1,10)*60)
         except:
@@ -180,8 +211,8 @@ async def _(bot:Bot, event: GroupMessageEvent):
             "显然你不是这六分之一的“幸运儿”。但是好消息是，游戏还在继续。",
             "咔的一声，撞针敲击到空仓上。——你还安全地活着。",
             "你的运气不错。祝你好运。",
-            f"偷偷告诉你，如果没有拨动滚轮的话，接下来第{star - st}发是子弹的位置。",
-            f"偷偷告诉你，如果没有拨动滚轮的话，{'下回合将游戏结束。' if star - st == 1 else '下一发是空的。'}",
+            f"偷偷告诉你，如果没有拨动滚轮的话，接下来第{star[event.group_id] - st[event.group_id]}发是子弹的位置。",
+            f"偷偷告诉你，如果没有拨动滚轮的话，{'下回合将游戏结束。' if star[event.group_id] - st[event.group_id] == 1 else '下一发是空的。'}",
             "小提示：其实你可以不参加这个游戏",
             "小提示：每次开枪之前可以重新拨动滚轮哦"
             ]
