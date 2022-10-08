@@ -49,7 +49,7 @@ if path.exists():
 else:
     namelist = {}
 
-add_namelist = on_command("添加名单", rule = to_me(), permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 5)
+add_namelist = on_command("添加名单", rule = to_me(), permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
 @add_namelist.handle()
 async def _(event: GroupMessageEvent,arg: Message = CommandArg()):
@@ -65,7 +65,7 @@ async def _(event: GroupMessageEvent,arg: Message = CommandArg()):
             json.dump(namelist, f, ensure_ascii=False, indent=4)
         await add_namelist.finish("已添加")
 
-ban = on_command("禁言", permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 5)
+ban = on_command("禁言", permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
 @ban.handle()
 async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
@@ -83,7 +83,7 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
         else:
             pass
 
-amnesty = on_command("解封", aliases = {"解禁", "解除禁言"}, permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 5)
+amnesty = on_command("解封", aliases = {"解禁", "解除禁言"}, permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
 @amnesty.handle()
 async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), state: T_State = State()):
@@ -146,19 +146,23 @@ global star, st
 star = {}
 st = {}
 
-ban_game_switch_on = on_command("开启自由轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
+ban_game_switch_on = on_command("开启自由轮盘", aliases = {"开启无赌注轮盘"},permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
 @ban_game_switch_on.handle()
 async def _(bot:Bot, event: GroupMessageEvent):
+    global switch
     switch[event.group_id] = True
     logger.info("自由轮盘已开启！")
+    await ban_game_switch_on.finish("自由轮盘已开启！")
 
-ban_game_switch_off = on_command("关闭自由轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
+ban_game_switch_off = on_command("关闭自由轮盘", aliases = {"关闭无赌注轮盘"},permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER , priority = 5)
 @ban_game_switch_off.handle()
 async def _(bot:Bot, event: GroupMessageEvent):
+    global switch, star, st
     switch[event.group_id] = False
     star = {}
     st = {}
     logger.info("自由轮盘已关闭！")
+    await ban_game_switch_off.finish("自由轮盘已关闭！")
 
 async def S(bot: Bot, event: GroupMessageEvent) -> bool:
     switch.setdefault(event.group_id,False)
@@ -166,7 +170,7 @@ async def S(bot: Bot, event: GroupMessageEvent) -> bool:
 
 
 
-ban_game = on_command("无赌注轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER | S ,aliases = {"自由轮盘", "拨动滚轮"}, priority = 5)
+ban_game = on_command("无赌注轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER | S ,aliases = {"自由轮盘"}, priority = 5)
 
 @ban_game.handle()
 async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
@@ -180,7 +184,7 @@ async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
         msg = [
             "这个游戏非常简单，只需要几种道具：一把左轮，一颗子弹，以及愿意跟你一起玩的人。",
             "拿起这把左轮，对着自己的脑袋扣动扳机。如果安然无恙，继续游戏。",
-            "如果你是六分之一的“幸运儿”，那么恭喜你，游戏结束。",
+            "对着自己，扣动扳机。如果你是六分之一的“幸运儿”，那么恭喜你，游戏结束。",
             "等等......好像有点不对劲？不过好在“幸运儿”永远没有机会开口说话并诉说游戏的邪恶了",
             "这个游戏非常公平，因为左轮最大的优点就是——不会卡壳",
             "小提示：每次开枪之前可以重新拨动滚轮哦"
@@ -190,6 +194,24 @@ async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
 async def Ready(bot: Bot, event: GroupMessageEvent) -> bool:
     star.setdefault(event.group_id,0)
     return star[event.group_id] > 0
+
+roll = on_command("重新装弹",permission = Ready ,aliases = {"拨动滚轮"}, priority = 4, block=True)
+
+@roll.handle()
+async def _(bot:Bot, event: GroupMessageEvent):
+    global star, st
+    st[event.group_id] = 0
+    star[event.group_id] = random.randint(1,6)
+    msg = [
+        "金属轮转动清脆，子弹重新排列。",
+        "——依旧没有人知道子弹的位置。",
+        "也许...没有人知道子弹的位置。",
+        "拿起这把左轮，对着自己的脑袋扣动扳机。如果安然无恙，继续游戏。",
+        "小提示：开枪之前，你还可以继续拨动滚轮哦",
+        f"偷偷告诉你，{'如果你开枪的话，下回合将游戏结束。' if star[event.group_id] == 1 else '下一发是空的。'}"
+        ]
+    random.choice(msg)
+    await roll.finish("重新装弹！\n" + random.choice(msg))
 
 shot = on_command("开枪", permission = Ready ,priority = 4, block=True)
 
@@ -212,9 +234,10 @@ async def _(bot:Bot, event: GroupMessageEvent):
             "显然你不是这六分之一的“幸运儿”。但是好消息是，游戏还在继续。",
             "咔的一声，撞针敲击到空仓上。——你还安全地活着。",
             "你的运气不错。祝你好运。",
+            "小提示：每次开枪之前可以重新拨动滚轮哦",
             f"偷偷告诉你，如果没有拨动滚轮的话，接下来第{star[event.group_id] - st[event.group_id]}发是子弹的位置。",
             f"偷偷告诉你，如果没有拨动滚轮的话，{'下回合将游戏结束。' if star[event.group_id] - st[event.group_id] == 1 else '下一发是空的。'}",
-            "小提示：其实你可以不参加这个游戏",
-            "小提示：每次开枪之前可以重新拨动滚轮哦"
+            f"拨动滚轮时，你看到了，第{star[event.group_id]}发是子弹的位置。",
+            f"撞针发出的清脆金属声。自从上次拨动滚轮，这已经是第{st[event.group_id]}发空枪了。"
             ]
         await shot.finish("继续！\n" + random.choice(msg))
