@@ -10,8 +10,8 @@ from nonebot.adapters.onebot.v11 import (
     )
 from nonebot.permission import SUPERUSER
 
-from nonebot.typing import T_State
-from nonebot.params import Depends, CommandArg, Arg, State
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg, Arg
 
 from nonebot import logger
 
@@ -85,9 +85,12 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
 
 amnesty = on_command("解封", aliases = {"解禁", "解除禁言"}, permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
+ban_list = {}
+
 @amnesty.handle()
-async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), state: T_State = State()):
-    ban_list = {event.group_id:[]}
+async def _(bot:Bot, event: GroupMessageEvent, matcher: Matcher, arg: Message = CommandArg()):
+    global ban_list
+    ban_list[event.group_id] = []
     member_list = await bot.get_group_member_list(group_id = event.group_id, no_cache = True)
     msg = ""
     now = time.time()
@@ -108,7 +111,6 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), stat
             msg += f"{nickname} {member['user_id']}\n    -- {Time}\n"
     else:
         if ban_list[event.group_id]:
-            state['ban_list'] = ban_list[event.group_id]
             user_id = get_message_at(event.json())
 
             group_id = str(event.group_id)
@@ -120,9 +122,11 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), stat
                 user_id.append(user)
 
             if user_id:
-                state['user_id'] = ""
+                user_id_list = ""
                 for i in user_id:
-                    state['user_id'] += f"{i} "
+                    user_id_list += f"{i} "
+                else:
+                    matcher.set_arg("user_id", user_id_list)
             else:
                 await amnesty.send("以下成员正在禁言：\n" + msg[:-1])
                 await asyncio.sleep(1)
@@ -130,11 +134,11 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg(), stat
             await amnesty.finish()
 
 @amnesty.got("user_id", prompt = "请输入要解除禁言的成员，如输入多个群成员用空格隔开。")
-async def _(bot:Bot, event: GroupMessageEvent, user_id: Message = Arg(), state: T_State = State()):
+async def _(bot:Bot, event: GroupMessageEvent, user_id: Message = Arg()):
     user_id = str(user_id).strip().split()
     if user_id:
         for i in user_id:
-            if int(i) in state['ban_list']:
+            if int(i) in ban_list[event.group_id]:
                 await bot.set_group_ban(group_id = event.group_id, user_id = int(i), duration = 0)
 
     await amnesty.finish()
@@ -173,7 +177,7 @@ async def S(bot: Bot, event: GroupMessageEvent) -> bool:
 ban_game = on_command("无赌注轮盘",permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER | S ,aliases = {"自由轮盘"}, priority = 5)
 
 @ban_game.handle()
-async def _(bot:Bot, event: GroupMessageEvent, state: T_State = State()):
+async def _(bot:Bot, event: GroupMessageEvent):
     global star, st
     st[event.group_id] = 0
     if star.setdefault(event.group_id,0):
