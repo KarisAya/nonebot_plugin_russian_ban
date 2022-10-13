@@ -74,12 +74,12 @@ async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
     namelist.setdefault(group_id,{})
     if msg in namelist[group_id].keys():
         user_id = namelist[group_id][msg]
-        await bot.set_group_ban(group_id = event.group_id, user_id = user_id, duration = 86400)
+        await bot.set_group_ban(group_id = event.group_id, user_id = user_id, duration = 3600)
     else:
         at = get_message_at(event.json())
         if at:
             for i in at:
-                await bot.set_group_ban(group_id = event.group_id, user_id = i, duration = 86400)
+                await bot.set_group_ban(group_id = event.group_id, user_id = i, duration = 3600)
         else:
             pass
 
@@ -159,8 +159,8 @@ ban_game_switch_off = on_command("关闭自由轮盘", aliases = {"关闭无赌�
 async def _(bot:Bot, event: GroupMessageEvent):
     global switch, star, st
     switch[event.group_id] = False
-    star = {}
-    st = {}
+    star[event.group_id] = 0
+    st[event.group_id] = 0
     logger.info("自由轮盘已关闭！")
     await ban_game_switch_off.finish("自由轮盘已关闭！")
 
@@ -203,7 +203,7 @@ async def _(bot:Bot, event: GroupMessageEvent):
     st[event.group_id] = 0
     star[event.group_id] = random.randint(1,6)
     msg = [
-        "金属轮转动清脆，子弹重新排列。",
+        "随着金属轮清脆的转动声，子弹重新排列。",
         "——依旧没有人知道子弹的位置。",
         "也许...没有人知道子弹的位置。",
         "拿起这把左轮，对着自己的脑袋扣动扳机。如果安然无恙，继续游戏。",
