@@ -1,4 +1,4 @@
-from nonebot.plugin.on import on_command
+from nonebot.plugin.on import on_command,on_regex
 from nonebot.rule import to_me
 from nonebot.adapters.onebot.v11 import (
     Bot,
@@ -15,9 +15,11 @@ from nonebot.params import CommandArg, Arg
 
 from nonebot import logger
 
+import re
 import asyncio
 import time
 import random
+import unicodedata
 
 try:
     import ujson as json
@@ -39,6 +41,16 @@ def get_message_at(data: str) -> list:
         return qq_list
     except Exception:
         return []
+
+def number(N) -> int:
+    try:
+        n = int(N)
+    except ValueError:
+        try:
+            n = int(unicodedata.numeric(N))
+        except (TypeError, ValueError):
+            n = None
+    return n
 
 # 快捷禁言/解禁
 
@@ -65,23 +77,53 @@ async def _(event: GroupMessageEvent,arg: Message = CommandArg()):
             json.dump(namelist, f, ensure_ascii=False, indent=4)
         await add_namelist.finish("已添加")
 
-ban = on_command("禁言", permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
+ban = on_regex(r"^禁言(\d+|[一二三四五六七八九十]|).*$", permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
 @ban.handle()
-async def _(bot:Bot, event: GroupMessageEvent, arg: Message = CommandArg()):
-    group_id = str(event.group_id)
-    msg = arg.extract_plain_text().strip()
-    namelist.setdefault(group_id,{})
-    if msg in namelist[group_id].keys():
-        user_id = namelist[group_id][msg]
-        await bot.set_group_ban(group_id = event.group_id, user_id = user_id, duration = 3600)
-    else:
-        at = get_message_at(event.json())
-        if at:
-            for i in at:
-                await bot.set_group_ban(group_id = event.group_id, user_id = i, duration = 3600)
+async def _(bot:Bot, event: GroupMessageEvent):
+    cmd = event.get_plaintext().strip().split()
+    T = re.search(r"^禁言(\d+|[一二三四五六七八九十]|)(.*)$",cmd[0])
+
+    if T:
+        t = T.group(1)
+        t = number(t) if t else 5
+
+        unit  = T .group(2)
+        if unit:
+            if unit == "秒" or unit == "s":
+                unit = 1
+            elif unit == "分钟" or unit == "min":
+                unit = 60
+            elif unit == "小时" or unit == "h":
+                unit = 3600
+            elif unit == "天" or unit == "d":
+                unit = 86400
+            elif unit == "月" or unit == "个月" or unit == "M":
+                unit = 2592000
+            else:
+                unit = 60
         else:
-            pass
+            unit = 60
+
+        t = t*unit
+        t = 60 if t < 60 else t
+        t = 2591940 if t > 2591940 else t
+
+    else:
+        t = 300
+
+    group_id = str(event.group_id)
+    namelist.setdefault(group_id,{})
+    if len(cmd) > 1:
+        for name in cmd[1:]:
+            if name in namelist[group_id].keys():
+                user_id = namelist[group_id][name]
+                await bot.set_group_ban(group_id = event.group_id, user_id = user_id, duration = t)
+
+    at = get_message_at(event.json())
+    if at:
+        for i in at:
+            await bot.set_group_ban(group_id = event.group_id, user_id = i, duration = t)
 
 amnesty = on_command("解封", aliases = {"解禁", "解除禁言"}, permission = SUPERUSER | GROUP_ADMIN | GROUP_OWNER, priority = 20)
 
@@ -128,7 +170,7 @@ async def _(bot:Bot, event: GroupMessageEvent, matcher: Matcher, arg: Message = 
                 else:
                     matcher.set_arg("user_id", user_id_list)
             else:
-                await amnesty.send("以下成员正在禁言：\n" + msg[:-1])
+                await amnesty.send("以下成员正在被禁言：\n" + msg[:-1])
                 await asyncio.sleep(1)
         else:
             await amnesty.finish()
