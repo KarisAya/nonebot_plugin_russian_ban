@@ -1,0 +1,13 @@
+[project]
+name = "nonebot-plugin-russian-ban"
+version = "1.0.7"
+description = ""
+authors = [{ name = "KarisAya", email = "karisaya@foxmail.com" }]
+readme = "README.md"
+requires-python = ">=3.12,<4.0.0"
+dependencies = ["nonebot2 (>=2.4.2,<3.0.0)", "nonebot-adapter-onebot (>=2.4.6,<3.0.0)"]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
