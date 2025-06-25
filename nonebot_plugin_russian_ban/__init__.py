@@ -207,6 +207,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
     global states
     state = states[event.group_id]
     if state.star == 1:
+        del states[event.group_id]
         try:
             await bot.set_group_ban(group_id=event.group_id, user_id=event.user_id, duration=random.randint(2, 6) * 60)
         except Exception as e:
