@@ -27,7 +27,9 @@
 
 使用 nb-cli 安装
 
-轮盘禁言小游戏
+```bash
+nb plugin install nonebot_plugin_russian_ban
+```
 
 # 介绍
 
