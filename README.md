@@ -37,7 +37,7 @@ nb plugin install nonebot_plugin_russian_ban
 
 ## 开始游戏
 
-**指令**：`无赌注轮盘` `自由轮盘`
+**指令**：`轮盘禁言` `自由轮盘`
 
 开启群内随机 ban 人游戏
 
