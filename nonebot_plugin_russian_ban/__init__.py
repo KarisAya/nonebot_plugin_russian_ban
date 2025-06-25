@@ -80,7 +80,7 @@ async def _(bot: Bot, event: GroupMessageEvent, state: T_State):
             await amnesty.finish("当前没有成员被禁言。")
         msg = []
         for uid, (nickname, interval) in ban_info.items():
-            msg.append(f"{nickname} {uid}\n    -- {format_timedelta(interval)}\n")
+            msg.append(f"{nickname} {uid}\n    -- {format_timedelta(int(interval))}\n")
         state["ban_info"] = ban_info
         await amnesty.send("以下成员正在被禁言：\n" + "\n".join(msg))
 
@@ -152,7 +152,10 @@ game_start_tips = [
 @game_start.handle()
 async def _(event: GroupMessageEvent):
     global states
-    state = states[event.group_id]
+    if event.group_id in states:
+        state = states[event.group_id]
+    else:
+        state = states[event.group_id] = BanGameState()
     state.star = random.randint(1, 6)
     if state.st == 0:
         msg = "游戏开始！\n" + random.choice(game_start_tips)
@@ -223,4 +226,4 @@ async def _(bot: Bot, event: GroupMessageEvent):
             case _:
                 msg = random.choice(game_shot_tips)
         state.star -= 1
-        await game_shot.finish("继续！\n" + random.choice(msg))
+        await game_shot.finish("继续！\n" + msg)

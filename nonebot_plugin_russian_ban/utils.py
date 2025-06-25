@@ -9,7 +9,7 @@ def to_int(N) -> int | None:
     return result
 
 
-def format_timedelta(seconds: int | float) -> str:
+def format_timedelta(seconds: int) -> str:
     days = seconds // 86400
     seconds -= days * 86400
     hours = seconds // 3600
