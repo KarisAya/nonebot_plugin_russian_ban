@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-russian-ban"
-version = "1.1.0"
+version = "1.1.0r1"
 description = ""
 authors = [{ name = "KarisAya", email = "karisaya@foxmail.com" }]
 readme = "README.md"

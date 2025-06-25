@@ -215,6 +215,7 @@ async def _(bot: Bot, event: GroupMessageEvent):
             pass
         await game_shot.finish("中弹！游戏结束。", at_sender=True)
     else:
+        state.star -= 1
         match random.randint(1, 10):
             case 1:
                 msg = f"提示：接下来第{state.star}发是子弹的位置。"
@@ -226,5 +227,4 @@ async def _(bot: Bot, event: GroupMessageEvent):
                 msg = f"提示：{'你应该重新拨动滚轮' if state.star == 1 else '每次开枪之前可以重新拨动滚轮哦'}。"
             case _:
                 msg = random.choice(game_shot_tips)
-        state.star -= 1
         await game_shot.finish("继续！\n" + msg)
