@@ -1,75 +1,70 @@
-<p align="center">
-  <a href="https://v2.nonebot.dev/"><img src="https://v2.nonebot.dev/logo.png" width="200" height="200" alt="nonebot"></a>
-</p>
 <div align="center">
 
-# nonebot_plugin_russian_ban
+<a href="https://v2.nonebot.dev/store">
+  <img src="https://raw.githubusercontent.com/A-kirami/nonebot-plugin-template/resources/nbp_logo.png" width="180" height="180" alt="NoneBotPluginLogo">
+</a>
 
-轮盘禁言小游戏
+<p>
+  <img src="https://raw.githubusercontent.com/A-kirami/nonebot-plugin-template/resources/NoneBotPlugin.svg" width="240" alt="NoneBotPluginText">
+</p>
+
+# NoneBot-Plugin-Russian-Ban
+
+✨ 轮盘禁言小游戏 ✨
+
+[![python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![license](https://img.shields.io/github/license/KarisAya/nonebot_plugin_russian_ban.svg)](./LICENSE)
+[![pypi](https://img.shields.io/pypi/v/nonebot_plugin_russian_ban.svg)](https://pypi.python.org/pypi/nonebot_plugin_russian_ban)
+[![pypi download](https://img.shields.io/pypi/dm/nonebot_plugin_russian_ban)](https://pypi.python.org/pypi/nonebot_plugin_russian_ban)
+<br />
+
+[![机器人 bug 研究中心](https://img.shields.io/badge/QQ%E7%BE%A4-744751179-maroon?)](https://qm.qq.com/q/3vpD9Ypb0c)
 
 </div>
 
-## 安装
-    pip install nonebot_plugin_russian_ban
-## 使用
-    nonebot.load_plugin('nonebot_plugin_russian_ban')
-## 介绍
+# 安装
 
-此功能需要给bot设置为管理员。
+使用 nb-cli 安装
 
-### 开始游戏
+轮盘禁言小游戏
 
-__指令__：`无赌注轮盘` `自由轮盘`
+# 介绍
 
-开启群内随机ban人游戏
+此功能需要给 bot 设置为管理员。
 
-__指令__：`拨动滚轮` `重新装弹`
+## 开始游戏
+
+**指令**：`无赌注轮盘` `自由轮盘`
+
+开启群内随机 ban 人游戏
+
+**指令**：`拨动滚轮` `重新装弹`
 
 重置子弹的位置。
 
-__指令__：`开枪`
+**指令**：`开枪`
 
 顾名思义，开枪。
 
-__指令【管理员，群主，超管】__：`开启自由轮盘` `关闭自由轮盘`
+**指令【管理员，群主，超管】**：`开启自由轮盘` `关闭自由轮盘`
 
 控制当前群内可否发起自由轮盘游戏，【管理员，群主，超管】可无视此设定在群内发起轮盘。
 
-### 快捷禁言/解禁
+## 快捷禁言/解禁
 
 此项功能是为轮盘禁言打扫战场用。
 
-__指令【管理员，群主，超管】__：`@bot添加名单 代号 @name`
+**指令【管理员，群主，超管】**：`禁言 @name`
 
-在本群添加重点关照人群，以便通过代号快捷禁言，可以一次设置多人。
-    
-    示例：
-    
-    管理员：@bot添加名单 机器人@bot 文酱@本群喵喵怪文酱 小叶子@茶酱
-    机器人：添加成功
-    
-    管理员：禁言小叶子
-    系统提示：小叶子被禁言1天
-    
-    管理员：解封小叶子
-    系统提示：小叶子被解除禁言
-    
-__指令【管理员，群主，超管】__：`禁言 代号/@name`
+给@的成员禁言 5 分钟，可@多人。如果给群友设置过代号，可以通过代号快捷禁言
 
-给@的成员禁言5分钟，可@多人。如果给群友设置过代号，可以通过代号快捷禁言
-
-__指令【管理员，群主，超管】__：`禁言一小时 @name` `禁言10分钟 @name` `禁言一个月 @name`
+**指令【管理员，群主，超管】**：`禁言一小时 @name` `禁言10分钟 @name` `禁言一个月 @name`
 
 给@的成员相应的时间，可@多人
 
-__指令【管理员，群主，超管】__：`解封` `解封 代号/@name`
+**指令【管理员，群主，超管】**：`解封` `解封 @name`
 
 给@的成员解除禁言。可@多人。如果给群友设置过代号，可以通过代号快捷解除禁言。
 
 如果没有指定成员会返回当前被封成员列表。之后可以根据提示进一步设置。
-    
-## 其他
-
-如有建议，bug反馈，以及讨论新玩法，新机制（或者单纯没有明白怎么用）可以来加群哦~
-
-![群号](https://github.com/KarisAya/nonebot_plugin_game_collection/blob/master/%E9%99%84%E4%BB%B6/qrcode_1665028285876.jpg)
