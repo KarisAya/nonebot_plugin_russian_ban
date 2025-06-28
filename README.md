@@ -36,18 +36,26 @@ nb plugin install nonebot_plugin_russian_ban
 此功能需要给 bot 设置为管理员，否则会提示 bot 没有权限。
 
 效果：
-
-**禁言与解封**
-
-![禁言与解封](./demo/禁言与解封.jpg)
-
-**指定时间禁言与使用 QQ 号解封**
-
-![指定时间禁言与使用QQ号解封](./demo/指定时间禁言与使用QQ号解封.jpg)
-
-**自由轮盘效果**
-
-![自由轮盘效果](./demo/自由轮盘效果.png)
+<table>
+  <tr>
+    <td>
+      <p align="center">
+        <img src="./demo/禁言与解封.jpg" width="260" alt="禁言与解封" /><br>
+        <b>禁言与解封</b>
+      </p>
+      <p align="center">
+        <img src="./demo/指定时间禁言与使用QQ号解封.jpg" width="260" alt="指定时间禁言与使用QQ号解封" /><br>
+        <b>指定时间禁言与使用 QQ 号解封</b>
+      </p>
+    </td>
+    <td>
+      <p align="center">
+        <img src="./demo/自由轮盘效果.png" width="630" alt="自由轮盘效果" /><br>
+        <b>自由轮盘效果</b>
+      </p>
+    </td>
+  </tr>
+</table>
 
 ## 开始游戏
 
