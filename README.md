@@ -36,6 +36,7 @@ nb plugin install nonebot_plugin_russian_ban
 此功能需要给 bot 设置为管理员，否则会提示 bot 没有权限。
 
 效果：
+
 <table>
   <tr>
     <td>
